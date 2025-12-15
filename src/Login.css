@@ -1,0 +1,669 @@
+/* ============================================
+   LOGIN PAGE STYLES
+   ============================================ */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative background elements */
+.login-decoration {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.08;
+}
+
+.decoration-circle-1 {
+  width: 600px;
+  height: 600px;
+  background: var(--color-primary);
+  top: -200px;
+  right: -150px;
+  animation: float 20s ease-in-out infinite;
+}
+
+.decoration-circle-2 {
+  width: 400px;
+  height: 400px;
+  background: var(--color-secondary);
+  bottom: -100px;
+  left: -100px;
+  animation: float 15s ease-in-out infinite reverse;
+}
+
+.decoration-circle-3 {
+  width: 200px;
+  height: 200px;
+  background: var(--color-accent-gold);
+  top: 50%;
+  left: 10%;
+  animation: float 12s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  33% {
+    transform: translate(30px, -30px) rotate(5deg);
+  }
+  66% {
+    transform: translate(-20px, 20px) rotate(-3deg);
+  }
+}
+
+/* Login container */
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-soft-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-large);
+  padding: var(--space-2xl);
+  position: relative;
+  z-index: 1;
+}
+
+/* Header section */
+.login-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.login-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-lg);
+  box-shadow: var(--shadow-glow);
+}
+
+.login-icon svg {
+  width: 32px;
+  height: 32px;
+  color: var(--color-soft-white);
+}
+
+.login-header h1 {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-charcoal);
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.02em;
+}
+
+.login-header p {
+  color: var(--color-warm-gray);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  max-width: 280px;
+  margin: 0 auto;
+}
+
+/* Form container */
+.login-form-container {
+  min-height: 200px;
+  position: relative;
+}
+
+/* Loading spinner for FirebaseUI */
+.login-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-xl);
+}
+
+.login-loading .loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-sand);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Footer */
+.login-footer {
+  margin-top: var(--space-2xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-sand);
+  text-align: center;
+}
+
+.login-footer p {
+  font-size: 0.8125rem;
+  color: var(--color-warm-gray);
+  font-style: italic;
+  margin: 0 auto;
+}
+
+/* ============================================
+   FIREBASEUI OVERRIDES FOR LOGIN PAGE
+   ============================================ */
+
+/* Reset MDL card shadows */
+#firebaseui-auth-container .mdl-shadow--2dp,
+#firebaseui-auth-container .mdl-shadow--3dp,
+#firebaseui-auth-container .mdl-shadow--4dp,
+#firebaseui-auth-container .mdl-shadow--6dp,
+#firebaseui-auth-container .mdl-shadow--8dp,
+#firebaseui-auth-container .mdl-shadow--16dp {
+  box-shadow: none !important;
+}
+
+#firebaseui-auth-container .firebaseui-container {
+  background: transparent !important;
+  max-width: 100% !important;
+}
+
+#firebaseui-auth-container .firebaseui-card-content {
+  padding: 0 !important;
+}
+
+#firebaseui-auth-container .firebaseui-card-header {
+  display: none;
+}
+
+/* Hide the built-in "Trouble signing in?" link since we have custom forgot password */
+#firebaseui-auth-container .firebaseui-form-links {
+  display: none !important;
+}
+
+/* Style the provider buttons container */
+#firebaseui-auth-container .firebaseui-idp-list {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+#firebaseui-auth-container .firebaseui-list-item {
+  margin-bottom: var(--space-md) !important;
+}
+
+#firebaseui-auth-container .firebaseui-list-item:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Style individual provider buttons */
+#firebaseui-auth-container .firebaseui-idp-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 52px !important;
+  padding: var(--space-md) var(--space-lg) !important;
+  border-radius: var(--radius-md) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 500 !important;
+  transition: all var(--transition-normal) !important;
+  border: none !important;
+}
+
+/* Google button specific */
+#firebaseui-auth-container .firebaseui-idp-google {
+  background: var(--color-soft-white) !important;
+  border: 1.5px solid var(--color-sand) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+
+#firebaseui-auth-container .firebaseui-idp-google:hover {
+  background: var(--color-cream) !important;
+  border-color: var(--color-warm-gray) !important;
+  box-shadow: var(--shadow-medium) !important;
+  transform: translateY(-2px);
+}
+
+#firebaseui-auth-container .firebaseui-idp-google .firebaseui-idp-text {
+  color: var(--color-charcoal) !important;
+}
+
+/* Email/Password button */
+#firebaseui-auth-container .firebaseui-idp-password {
+  background: var(--color-primary) !important;
+  box-shadow: var(--shadow-soft), var(--shadow-glow) !important;
+}
+
+#firebaseui-auth-container .firebaseui-idp-password:hover {
+  background: var(--color-primary-dark) !important;
+  box-shadow: var(--shadow-medium), var(--shadow-glow) !important;
+  transform: translateY(-2px);
+}
+
+#firebaseui-auth-container .firebaseui-idp-password .firebaseui-idp-text {
+  color: var(--color-soft-white) !important;
+}
+
+/* Icon containers */
+#firebaseui-auth-container .firebaseui-idp-icon-wrapper {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#firebaseui-auth-container .firebaseui-idp-icon {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Text styling */
+#firebaseui-auth-container .firebaseui-idp-text {
+  font-family: var(--font-body) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 500 !important;
+  padding-left: var(--space-sm) !important;
+}
+
+#firebaseui-auth-container .firebaseui-idp-text-long {
+  display: block !important;
+}
+
+#firebaseui-auth-container .firebaseui-idp-text-short {
+  display: none !important;
+}
+
+#firebaseui-auth-container .firebaseui-link {
+  color: var(--color-primary) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  text-decoration: none !important;
+  transition: color var(--transition-fast) !important;
+}
+
+#firebaseui-auth-container .firebaseui-link:hover {
+  color: var(--color-primary-dark) !important;
+  text-decoration: underline !important;
+}
+
+/* MDL Textfield overrides */
+#firebaseui-auth-container .mdl-textfield {
+  width: 100% !important;
+  padding: 0 !important;
+  margin-bottom: var(--space-lg) !important;
+}
+
+#firebaseui-auth-container .mdl-textfield__input {
+  width: 100% !important;
+  padding: var(--space-md) var(--space-lg) !important;
+  font-family: var(--font-body) !important;
+  font-size: 1rem !important;
+  color: var(--color-charcoal) !important;
+  background: var(--color-soft-white) !important;
+  border: 1.5px solid var(--color-sand) !important;
+  border-radius: var(--radius-md) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+#firebaseui-auth-container .mdl-textfield__input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-glow) !important;
+  outline: none !important;
+}
+
+/* Hide MDL underline bar completely - it's on the label::after pseudo-element */
+#firebaseui-auth-container .mdl-textfield__label::after,
+#firebaseui-auth-container .firebaseui-label::after,
+.mdl-textfield__label::after,
+.firebaseui-label::after {
+  display: none !important;
+  content: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  background: transparent !important;
+}
+
+#firebaseui-auth-container .mdl-textfield__label {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  color: var(--color-warm-gray) !important;
+  left: var(--space-lg) !important;
+  top: 14px !important;
+  transition: all var(--transition-fast) !important;
+}
+
+#firebaseui-auth-container .mdl-textfield--floating-label.is-focused .mdl-textfield__label,
+#firebaseui-auth-container .mdl-textfield--floating-label.is-dirty .mdl-textfield__label {
+  color: var(--color-primary) !important;
+  font-size: 0.75rem !important;
+  top: -20px !important;
+  left: 0 !important;
+}
+
+/* Submit button */
+#firebaseui-auth-container .firebaseui-id-submit {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 48px !important;
+  padding: var(--space-md) var(--space-xl) !important;
+  margin-top: var(--space-md) !important;
+  background: var(--color-primary) !important;
+  color: var(--color-soft-white) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  box-shadow: var(--shadow-soft), var(--shadow-glow) !important;
+  transition: all var(--transition-normal) !important;
+  cursor: pointer !important;
+}
+
+#firebaseui-auth-container .firebaseui-id-submit:hover {
+  background: var(--color-primary-dark) !important;
+  box-shadow: var(--shadow-medium), var(--shadow-glow) !important;
+  transform: translateY(-2px);
+}
+
+/* Secondary link */
+#firebaseui-auth-container .firebaseui-id-secondary-link {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 44px !important;
+  padding: var(--space-sm) var(--space-lg) !important;
+  margin-top: var(--space-sm) !important;
+  background: transparent !important;
+  color: var(--color-primary) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  border: none !important;
+  text-transform: none !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+}
+
+#firebaseui-auth-container .firebaseui-id-secondary-link:hover {
+  color: var(--color-primary-dark) !important;
+  text-decoration: underline !important;
+}
+
+/* Error message */
+#firebaseui-auth-container .firebaseui-error {
+  color: var(--color-error) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  margin-top: var(--space-sm) !important;
+  padding-left: var(--space-lg) !important;
+}
+
+/* Progress bar */
+#firebaseui-auth-container .mdl-progress {
+  width: 100% !important;
+  height: 3px !important;
+  background: var(--color-sand) !important;
+  border-radius: var(--radius-full) !important;
+  overflow: hidden !important;
+}
+
+#firebaseui-auth-container .mdl-progress > .progressbar {
+  background: var(--color-primary) !important;
+}
+
+/* Form actions container */
+#firebaseui-auth-container .firebaseui-form-actions {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+  margin-top: var(--space-lg) !important;
+}
+
+/* Info bar */
+#firebaseui-auth-container .firebaseui-info-bar {
+  background: var(--color-cream) !important;
+  border: 1px solid var(--color-accent-gold) !important;
+  border-radius: var(--radius-md) !important;
+  margin-bottom: var(--space-lg) !important;
+  padding: var(--space-md) !important;
+}
+
+#firebaseui-auth-container .firebaseui-info-bar-message {
+  color: var(--color-charcoal) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .login-container {
+    padding: var(--space-xl);
+    border-radius: var(--radius-lg);
+  }
+  
+  .login-header h1 {
+    font-size: 1.75rem;
+  }
+  
+  .login-icon {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .login-icon svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* ============================================
+   FORGOT PASSWORD LINK & MODAL
+   ============================================ */
+
+/* Forgot Password Link */
+.forgot-password-link {
+  display: inline-block;
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-md);
+  transition: all var(--transition-fast);
+  border-radius: var(--radius-sm);
+}
+
+.forgot-password-link:hover {
+  color: var(--color-primary-dark);
+  background: rgba(196, 92, 62, 0.08);
+  text-decoration: underline;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(45, 41, 38, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Modal Content */
+.modal-content {
+  width: 100%;
+  max-width: 400px;
+  background: var(--color-soft-white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-large);
+  padding: var(--space-2xl);
+  position: relative;
+}
+
+/* Modal Close Button */
+.modal-close {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-warm-gray);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+  background: var(--color-sand);
+  color: var(--color-charcoal);
+}
+
+.modal-close svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Modal Header */
+.modal-header {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.modal-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-lg);
+}
+
+.modal-icon svg {
+  width: 28px;
+  height: 28px;
+  color: var(--color-soft-white);
+}
+
+.modal-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-charcoal);
+  margin-bottom: var(--space-sm);
+}
+
+.modal-header p {
+  font-size: 0.9375rem;
+  color: var(--color-warm-gray);
+  line-height: 1.5;
+  margin: 0 auto;
+  max-width: 300px;
+}
+
+/* Reset Form */
+.reset-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-charcoal);
+}
+
+/* Reset Status Message */
+.reset-status {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.reset-status svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.reset-status.success {
+  background: rgba(90, 156, 107, 0.1);
+  color: var(--color-success);
+}
+
+.reset-status.error {
+  background: rgba(196, 78, 78, 0.1);
+  color: var(--color-error);
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: var(--space-md);
+  margin-top: var(--space-sm);
+}
+
+.form-actions .btn {
+  flex: 1;
+}
+
+.form-actions .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Modal Responsive */
+@media (max-width: 480px) {
+  .modal-content {
+    padding: var(--space-xl);
+  }
+  
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+}
+
