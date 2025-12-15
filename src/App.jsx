@@ -1,7 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { auth, db } from './firebase';
-import Login from './Login';
 import './App.css';
+
+// Lazy load the Login component to reduce initial bundle size
+const Login = lazy(() => import('./Login'));
 
 // Dark mode hook
 const useDarkMode = () => {
@@ -42,6 +44,88 @@ const TAG_COLORS = [
   { name: 'Coral', value: '#e07a5f' },
 ];
 
+const DATE_FILTERS = [
+  { id: 'overdue', label: 'Overdue', icon: '⚠️' },
+  { id: 'today', label: 'Today', icon: '📅' },
+  { id: 'tomorrow', label: 'Tomorrow', icon: '📆' },
+  { id: 'this-week', label: 'This Week', icon: '🗓️' },
+  { id: 'upcoming', label: 'Upcoming', icon: '🔮' },
+  { id: 'no-date', label: 'No Due Date', icon: '📭' },
+];
+
+// Date helper functions
+const getStartOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const getEndOfDay = (date) => {
+  const d = new Date(date);
+  d.setHours(23, 59, 59, 999);
+  return d;
+};
+
+const isOverdue = (dueDate) => {
+  if (!dueDate) return false;
+  const due = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+  return getEndOfDay(due) < getStartOfDay(new Date());
+};
+
+const isToday = (dueDate) => {
+  if (!dueDate) return false;
+  const due = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+  const today = new Date();
+  return getStartOfDay(due).getTime() === getStartOfDay(today).getTime();
+};
+
+const isTomorrow = (dueDate) => {
+  if (!dueDate) return false;
+  const due = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return getStartOfDay(due).getTime() === getStartOfDay(tomorrow).getTime();
+};
+
+const isThisWeek = (dueDate) => {
+  if (!dueDate) return false;
+  const due = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+  const today = new Date();
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+  return due >= getStartOfDay(today) && due <= getEndOfDay(endOfWeek);
+};
+
+const isUpcoming = (dueDate) => {
+  if (!dueDate) return false;
+  const due = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+  const today = new Date();
+  // Future dates that are not today (tomorrow and beyond)
+  return getStartOfDay(due) > getStartOfDay(today);
+};
+
+const formatDueDate = (dueDate) => {
+  if (!dueDate) return null;
+  const due = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  if (isOverdue(dueDate)) {
+    return { text: 'Overdue', class: 'overdue' };
+  }
+  if (isToday(dueDate)) {
+    return { text: 'Today', class: 'today' };
+  }
+  if (isTomorrow(dueDate)) {
+    return { text: 'Tomorrow', class: 'tomorrow' };
+  }
+  return { 
+    text: due.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), 
+    class: 'future' 
+  };
+};
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -61,6 +145,12 @@ function App() {
   const [newTagName, setNewTagName] = useState('');
   const [newTagColor, setNewTagColor] = useState(TAG_COLORS[0].value);
   const [editingTask, setEditingTask] = useState(null);
+  const [editingTaskDetails, setEditingTaskDetails] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
+  const [editDueDate, setEditDueDate] = useState('');
+  const [selectedDateFilter, setSelectedDateFilter] = useState(null);
   const [isDarkMode, setIsDarkMode] = useDarkMode();
   const dragCounter = useRef({});
 
@@ -212,22 +302,29 @@ function App() {
     if (!newTaskTitle.trim()) return;
 
     try {
+      const taskData = {
+        title: newTaskTitle.trim(),
+        description: newTaskDescription.trim(),
+        status: 'todo',
+        order: getNextOrder('todo'),
+        tags: selectedTaskTags,
+        createdAt: new Date()
+      };
+      
+      if (newTaskDueDate) {
+        taskData.dueDate = new Date(newTaskDueDate);
+      }
+
       await db
         .collection('users')
         .doc(user.uid)
         .collection('tasks')
-        .add({
-          title: newTaskTitle.trim(),
-          description: newTaskDescription.trim(),
-          status: 'todo',
-          order: getNextOrder('todo'),
-          tags: selectedTaskTags,
-          createdAt: new Date()
-        });
+        .add(taskData);
 
       setNewTaskTitle('');
       setNewTaskDescription('');
       setSelectedTaskTags([]);
+      setNewTaskDueDate('');
       setShowModal(false);
     } catch (error) {
       console.error('Error creating task:', error);
@@ -278,6 +375,56 @@ function App() {
       await handleUpdateTaskTags(editingTask.id, selectedTaskTags);
       setEditingTask(null);
       setSelectedTaskTags([]);
+    }
+  };
+
+  // Edit Task Details
+  const openEditDetailsModal = (task) => {
+    setEditingTaskDetails(task);
+    setEditTitle(task.title);
+    setEditDescription(task.description || '');
+    // Convert Firestore timestamp to date string for input
+    if (task.dueDate) {
+      const due = task.dueDate.toDate ? task.dueDate.toDate() : new Date(task.dueDate);
+      setEditDueDate(due.toISOString().split('T')[0]);
+    } else {
+      setEditDueDate('');
+    }
+  };
+
+  const closeEditDetailsModal = () => {
+    setEditingTaskDetails(null);
+    setEditTitle('');
+    setEditDescription('');
+    setEditDueDate('');
+  };
+
+  const handleUpdateTaskDetails = async (e) => {
+    e.preventDefault();
+    if (!editingTaskDetails || !editTitle.trim()) return;
+
+    try {
+      const updateData = {
+        title: editTitle.trim(),
+        description: editDescription.trim()
+      };
+      
+      if (editDueDate) {
+        updateData.dueDate = new Date(editDueDate);
+      } else {
+        // Remove due date if cleared
+        updateData.dueDate = null;
+      }
+
+      await db
+        .collection('users')
+        .doc(user.uid)
+        .collection('tasks')
+        .doc(editingTaskDetails.id)
+        .update(updateData);
+      closeEditDetailsModal();
+    } catch (error) {
+      console.error('Error updating task:', error);
     }
   };
 
@@ -416,7 +563,51 @@ function App() {
       );
     }
     
+    // Apply date filter
+    if (selectedDateFilter) {
+      filteredTasks = filteredTasks.filter(task => {
+        switch (selectedDateFilter) {
+          case 'overdue':
+            return isOverdue(task.dueDate);
+          case 'today':
+            return isToday(task.dueDate);
+          case 'tomorrow':
+            return isTomorrow(task.dueDate);
+          case 'this-week':
+            return isThisWeek(task.dueDate);
+          case 'upcoming':
+            return isUpcoming(task.dueDate);
+          case 'no-date':
+            return !task.dueDate;
+          default:
+            return true;
+        }
+      });
+    }
+    
     return filteredTasks.sort((a, b) => (a.order || 0) - (b.order || 0));
+  };
+
+  const getDateFilterCount = (filterId) => {
+    return tasks.filter(task => {
+      if (task.status === 'completed') return false; // Don't count completed tasks
+      switch (filterId) {
+        case 'overdue':
+          return isOverdue(task.dueDate);
+        case 'today':
+          return isToday(task.dueDate);
+        case 'tomorrow':
+          return isTomorrow(task.dueDate);
+        case 'this-week':
+          return isThisWeek(task.dueDate);
+        case 'upcoming':
+          return isUpcoming(task.dueDate);
+        case 'no-date':
+          return !task.dueDate;
+        default:
+          return false;
+      }
+    }).length;
   };
 
   const getTagById = (tagId) => tags.find(t => t.id === tagId);
@@ -435,7 +626,18 @@ function App() {
 
   // Show login if not authenticated
   if (!user) {
-    return <Login onSignIn={handleSignIn} />;
+    return (
+      <Suspense fallback={
+        <div className="loading-screen">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <p>Loading...</p>
+          </div>
+        </div>
+      }>
+        <Login onSignIn={handleSignIn} />
+      </Suspense>
+    );
   }
 
   // Main app content when authenticated
@@ -554,7 +756,47 @@ function App() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
-                  Clear filters
+                  Clear tag filters
+                </button>
+              )}
+            </div>
+
+            {/* Due Dates Section */}
+            <div className="sidebar-section">
+              <div className="sidebar-section-header">
+                <h3>Due Dates</h3>
+              </div>
+              
+              <div className="date-filter-list">
+                {DATE_FILTERS.map(filter => {
+                  const count = getDateFilterCount(filter.id);
+                  return (
+                    <button
+                      key={filter.id}
+                      className={`date-filter-item ${selectedDateFilter === filter.id ? 'active' : ''} ${filter.id === 'overdue' && count > 0 ? 'has-overdue' : ''}`}
+                      onClick={() => setSelectedDateFilter(
+                        selectedDateFilter === filter.id ? null : filter.id
+                      )}
+                    >
+                      <span className="date-filter-icon">{filter.icon}</span>
+                      <span className="date-filter-label">{filter.label}</span>
+                      <span className={`date-filter-count ${filter.id === 'overdue' && count > 0 ? 'overdue' : ''}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedDateFilter && (
+                <button 
+                  className="clear-filters-btn" 
+                  onClick={() => setSelectedDateFilter(null)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                  Clear date filter
                 </button>
               )}
             </div>
@@ -564,7 +806,7 @@ function App() {
         {/* Main Content */}
         <main className="app-main">
           <div className="board-header">
-            {selectedFilterTags.length > 0 && (
+            {(selectedFilterTags.length > 0 || selectedDateFilter) && (
               <div className="active-filters">
                 <span>Filtering by:</span>
                 {selectedFilterTags.map(tagId => {
@@ -579,6 +821,12 @@ function App() {
                     </span>
                   ) : null;
                 })}
+                {selectedDateFilter && (
+                  <span className="filter-tag filter-tag-date">
+                    {DATE_FILTERS.find(f => f.id === selectedDateFilter)?.icon}{' '}
+                    {DATE_FILTERS.find(f => f.id === selectedDateFilter)?.label}
+                  </span>
+                )}
               </div>
             )}
             <button className="btn btn-primary add-task-btn" onClick={() => setShowModal(true)}>
@@ -622,6 +870,16 @@ function App() {
                         <div className="task-actions">
                           <button 
                             className="task-action-btn" 
+                            onClick={() => openEditDetailsModal(task)}
+                            title="Edit task"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                          <button 
+                            className="task-action-btn" 
                             onClick={() => openEditTagsModal(task)}
                             title="Edit tags"
                           >
@@ -657,6 +915,15 @@ function App() {
                               </span>
                             ) : null;
                           })}
+                        </div>
+                      )}
+                      {task.dueDate && (
+                        <div className={`task-due-date ${formatDueDate(task.dueDate)?.class || ''}`}>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                            <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                          {formatDueDate(task.dueDate)?.text}
                         </div>
                       )}
                     </div>
@@ -734,6 +1001,16 @@ function App() {
                   </div>
                 </div>
               )}
+              <div className="form-group">
+                <label htmlFor="taskDueDate">Due Date (optional)</label>
+                <input
+                  type="date"
+                  id="taskDueDate"
+                  className="input date-input"
+                  value={newTaskDueDate}
+                  onChange={(e) => setNewTaskDueDate(e.target.value)}
+                />
+              </div>
               <div className="modal-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
@@ -861,6 +1138,65 @@ function App() {
                 Save
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for editing task details */}
+      {editingTaskDetails && (
+        <div className="modal-overlay" onClick={closeEditDetailsModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Edit Task</h2>
+              <button className="modal-close" onClick={closeEditDetailsModal}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleUpdateTaskDetails}>
+              <div className="form-group">
+                <label htmlFor="editTaskTitle">Task Title</label>
+                <input
+                  type="text"
+                  id="editTaskTitle"
+                  className="input"
+                  placeholder="What needs to be done?"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="editTaskDescription">Description (optional)</label>
+                <textarea
+                  id="editTaskDescription"
+                  className="input textarea"
+                  placeholder="Add more details..."
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows="3"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="editTaskDueDate">Due Date (optional)</label>
+                <input
+                  type="date"
+                  id="editTaskDueDate"
+                  className="input date-input"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn btn-secondary" onClick={closeEditDetailsModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={!editTitle.trim()}>
+                  Save Changes
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
