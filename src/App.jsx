@@ -93,7 +93,7 @@ const isThisWeek = (dueDate) => {
   const normalizedDue = getStartOfDay(due);
   const today = new Date();
   const endOfWeek = new Date(today);
-  endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
+  endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
   return normalizedDue >= getStartOfDay(today) && normalizedDue <= getEndOfDay(endOfWeek);
 };
 

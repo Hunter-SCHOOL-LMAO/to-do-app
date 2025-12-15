@@ -181,7 +181,7 @@
   transform: translateX(-100%);
   transition: transform var(--transition-normal);
   position: fixed;
-  top: 73px;
+  top: var(--header-height);
   left: 0;
   bottom: 0;
   z-index: 90;
