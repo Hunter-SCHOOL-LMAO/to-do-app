@@ -64,8 +64,44 @@
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Layout */
-  --max-width: 480px;
+  --max-width: 1400px;
   --header-height: 64px;
+}
+
+/* ============================================
+   DARK MODE COLOR SCHEME
+   ============================================ */
+
+[data-theme="dark"] {
+  /* Primary Palette - Softer Terracotta for dark mode */
+  --color-primary: #e07a5f;
+  --color-primary-light: #f4a08a;
+  --color-primary-dark: #c45c3e;
+  --color-primary-glow: rgba(224, 122, 95, 0.35);
+
+  /* Secondary Palette - Brighter Sage for visibility */
+  --color-secondary: #a3c4a0;
+  --color-secondary-light: #c4dfc2;
+  --color-secondary-dark: #81a87e;
+
+  /* Neutral Palette - Dark mode inverted */
+  --color-cream: #1a1815;
+  --color-sand: #2a2622;
+  --color-charcoal: #f0ebe5;
+  --color-warm-gray: #a8a099;
+  --color-soft-white: #242120;
+
+  /* Accent Colors - Adjusted for dark mode */
+  --color-accent-gold: #e8bc6a;
+  --color-accent-navy: #6a8499;
+  --color-error: #e86b6b;
+  --color-success: #7bc48b;
+
+  /* Shadows - Darker and more dramatic */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --shadow-large: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 24px var(--color-primary-glow);
 }
 
 /* Reset & Base Styles */
@@ -89,6 +125,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Subtle background pattern */
@@ -102,6 +139,11 @@ body::before {
   opacity: 0.08;
   pointer-events: none;
   z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+[data-theme="dark"] body::before {
+  opacity: 0.12;
 }
 
 /* Typography Scale */
