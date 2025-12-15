@@ -90,10 +90,11 @@ const isTomorrow = (dueDate) => {
 const isThisWeek = (dueDate) => {
   if (!dueDate) return false;
   const due = dueDate.toDate ? dueDate.toDate() : new Date(dueDate);
+  const normalizedDue = getStartOfDay(due);
   const today = new Date();
   const endOfWeek = new Date(today);
   endOfWeek.setDate(today.getDate() + (7 - today.getDay()));
-  return due >= getStartOfDay(today) && due <= getEndOfDay(endOfWeek);
+  return normalizedDue >= getStartOfDay(today) && normalizedDue <= getEndOfDay(endOfWeek);
 };
 
 const isUpcoming = (dueDate) => {
